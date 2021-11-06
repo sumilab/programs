@@ -1,4 +1,4 @@
-This program measures similarity between two event causalities.
+This program is an implementation of ECM (Event Causality relationship similarity Measurement) that measures similarity between two event-causal relationships. The ECM solves a maximum weight matching problem on a bipartite graph, where the weights are the similarities between the event-causal relationships. 
 
 Publication
 * Yasunobu Sumikawa, Event Causal Relationship Retrieval, IEEE/WIC/ACM International Conference on Web Intelligence and Intelligent Agent Technology, 2021, to apper.
