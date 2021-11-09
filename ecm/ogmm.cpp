@@ -20,7 +20,7 @@ vector<double> split (const string &input, char delimiter);
 // solve ordered graph bipartite maximum matching
 // input    : edge weight matrix for complete bipartite graph (0 based index)
 // output   : set of edge (1 based index)
-edge_set ordered_bipartite_matching (const matrix<double> &data_table);
+edge_set ecm (const matrix<double> &data_table);
 
 int main() {
     // file name (change as apporopriate)
@@ -38,7 +38,7 @@ int main() {
     }
 
     // solve
-    const edge_set answer = ordered_bipartite_matching(data_table);
+    const edge_set answer = ecm(data_table);
 
     // output
     for (std::size_t i = 0; i < answer.size(); i++) {
@@ -65,7 +65,7 @@ vector<double> split (const string &input, char delimiter = ',') {
 }
 
 
-edge_set ordered_bipartite_matching (const matrix<double> &data_table) {
+edge_set ecm (const matrix<double> &data_table) {
     const std::size_t h = data_table.size(), w = data_table[0].size();
     matrix<double> dp(h + 1, vector<double>(w + 1, 0));
     matrix<std::pair<double, point>> range_max(h + 1, vector<std::pair<double, point>>(w + 1));
