@@ -1,13 +1,13 @@
 This program is an implementation of GLIA for nomal form program in COINS compiler. This implementation requires DivideExpression3 before.
 
 Example of compilation
-java -classpath ./classes coins.driver.Driver -coins:target=x86_64,ssa-opt=esplt/divex3/glia/prun/dce/srd3
+`java -classpath ./classes coins.driver.Driver -coins:target=x86_64,ssa-opt=esplt/divex3/glia/prun/dce/srd3`
 
-esplt: critical edge elimination
-divex3: applying DivideExpression3 that extracts array references
-prun: converting program from normal form to SSA form
-dce: dead code elimination
-srd3: converting program from SSA form to normal form
+* `esplt`: critical edge elimination
+* `divex3`: applying DivideExpression3 that extracts array references
+* `prun`: converting program from normal form to SSA form
+* `dce`: dead code elimination
+* `srd3`: converting program from SSA form to normal form
 
 # Publication
 1. Yasunobu Sumikawa and Munehiro Takimoto, [Global Load Instruction Aggregation Based on Dimensions of Arrays](https://www.sciencedirect.com/science/article/abs/pii/S0045790615003067), Computers and Electrical Engineering, Elsevier, Vol. 50, pp. 180 -- 199, 2016.
