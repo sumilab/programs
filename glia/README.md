@@ -1,4 +1,4 @@
-This program is an implementation of GLIA for nomal form program in COINS compiler. This implementation requires DivideExpression3 before.
+This program is an implementation of GLIA for nomal form program in [COINS](https://sourceforge.net/projects/coins-project/) compiler. This implementation requires DivideExpression3 before.
 
 Example of compilation
 `java -classpath ./classes coins.driver.Driver -coins:target=x86_64,ssa-opt=esplt/divex3/glia/prun/dce/srd3`
