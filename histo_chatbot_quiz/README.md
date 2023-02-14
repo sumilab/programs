@@ -8,7 +8,7 @@ The main program is `auto_quiz_gen.py`.
 * `keys.py`: setting the access token keys of Twitter Developer API
 * `StopWord_en.py`: removing stop words as preprocess
 * `util.py`: functions used in `auto_quiz_gen.py`, but these are usable in other programs
-* `dict_models.py`: train models for feature vector creation
+* `dict_models.py`: training models for feature vector creation
 
 
 ## History quiz data

@@ -13,12 +13,13 @@ from util import cos_sim, jaccard
 from util import m2v
 from util import use_twitter_api
 from mysql import get_obj
-ms = get_obj("localhost", db="twitter_histo_chatbot")
+ms = get_obj("localhost")
 
-abs_path = "" # Set the absolute path where this program is located.
+path = "." # Set the path where this program is located.
 # We assume that this path has a directory `models` to make feature vectors.
 
-current_news_user_list = "" # Set the link of Twitter list including Twitter users such as https://api.twitter.com/1.1/lists/members.json.
+list_id = int("") # Set the link of Twitter list including Twitter users.
+current_news_user_list = "https://api.twitter.com/1.1/lists/members.json"
 
 def post_current_news_quiz(time, lang):
     fname = "the_last_news_account_pos.pkl"
@@ -33,10 +34,10 @@ def post_current_news_quiz(time, lang):
     qfvdata = load_quiz_fvecs(filtering=tokens[0])
     qids, qfvecs = qfvdata[0], qfvdata[1]
 
-    post_quiz_by_text_similarity(nfvecs, qfvecs, qids, "Current-News-related ")
+    post_quiz(nfvecs, qfvecs, qids, "Current-News-related ")
 
 
-def load_quiz_fvecs(p=abs_path+"/models/quiz", mode="word", filtering=[]):
+def load_quiz_fvecs(p=path+"/models/quiz", mode="word", filtering=[]):
     if len(filtering) > 0:
         qtokens = pickle.load(open(p + "_quiz_token_fvecs.pkl", "rb"))
 
@@ -75,7 +76,7 @@ def load_quiz_fvecs(p=abs_path+"/models/quiz", mode="word", filtering=[]):
     return pickle.load(open(p + "_quiz_token_fvecs.pkl", "rb"))
 
 
-def post_quiz_by_text_similarity(ipts, qfvecs, qids, p, mode="tokens"):
+def post_quiz(ipts, qfvecs, qids, p, mode="tokens", qmode="importance"):
     for ipt in ipts:
         sval = []
         targets = []
@@ -102,8 +103,20 @@ def post_quiz_by_text_similarity(ipts, qfvecs, qids, p, mode="tokens"):
             idx = np.argmax(sval)
             qid = targets[idx]
 
-            sql = "select quiz_text from quiz where quiz_id = " + str(qid)
-            qtext = ms.select(sql)[0][0]
+            qsql = "select quiz_text, quiz_id from quiz where quiz_id = " + str(qid)
+
+            if qmode == "importance":
+                sql = "select quiz_text, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
+                data = ms.select(sql)
+
+                scores = [d[1] for d in data]
+                idx = np.argmax(scores)
+
+            else:
+                data = ms.select(qsql)
+                idx = random.randrange(len(data))
+            
+            qtext = data[idx][0]
             post_tweet(qtext, p=p)
 
             
@@ -114,7 +127,7 @@ def post_replying_simple_quiz(time, lang, tokens):
     return [data[idx][0]]
 
 
-def post_entity_quiz(time, lang, text):
+def post_entity_quiz(time, lang, text, mode="importance"):
     pos = text.find("about")
     if pos >= 0: text = text[pos+len("about"):]
     else:
@@ -140,15 +153,25 @@ def post_entity_quiz(time, lang, text):
 
     if len(data) < 1:
         return ["No suitable quiz stored in the current DB."]
-
     
-    idx = random.randrange(len(data))# How to select a quiz? IDF?
-    sql = "select quiz_text from quiz where quiz_id = " + str(data[idx][0])
-    qtext = ms.select(sql)[0][0]
+    qsql = "select quiz_text from quiz where quiz_id = " + str(data[idx][0])
+
+    if mode == "importance":
+        sql = "select quiz_text, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
+        data = ms.select(sql)
+
+        scores = [d[1] for d in data]
+        idx = np.argmax(scores)
+
+    else:
+        data = ms.select(qsql)
+        idx = random.randrange(len(data))
+        
+    qtext = data[idx][0]
     return [qtext]
 
 
-def get_current_news(list_id=1256794745512185857, pos=-1):
+def get_current_news(pos=-1):
     users = collect_users(list_id)
     if pos >= len(users): pos = pos % len(users)
     if pos > -1: users = [users[pos]]
@@ -226,10 +249,10 @@ def post_trending_quiz(time, lang, mode="lda"):
     ## trend word analysis
     tfvecs = make_fvec(twords, mode=mode)
 
-    post_quiz_by_text_similarity(tfvecs, qfvecs, qids, "Trending-related ", mode="both")
+    post_quiz(tfvecs, qfvecs, qids, "Trending-related ", mode="both")
 
 
-def make_fvec(tlists, p=abs_path+"/models/quiz", nb=3, na=0.2, tnum=100, mode="word"):
+def make_fvec(tlists, p=path+"/models/quiz", nb=3, na=0.3, tnum=100, mode="word"):
     if mode == "lda":
         dct = corpora.Dictionary.load(p + "_" + str(nb) + "_" + str(na) + ".dict")
         tfidf = models.TfidfModel.load(p + "_" + str(nb) + "_" + str(na) + "_tfidf.model")
@@ -269,11 +292,19 @@ def pickup_text_similar_quiz(time, lang, tokens=[], topics=[]):
         print(sql + cond)
 
 
-def post_calendar_quiz(time, lang):
+def post_calendar_quiz(time, lang, mode="importance"):
     y, m, d = time[0], time[1], time[2]
-    sql = "select quiz_text from quiz where lang = '" + lang + "' AND ((year=" + str(y) + ") OR (month=" + str(m) + " AND day=" + str(d) + "))"
+    qsql = "select quiz_text, quiz_id from quiz where lang = '" + lang + "' AND ((year=" + str(y) + ") OR (month=" + str(m) + " AND day=" + str(d) + "))"
+    sql = "select quiz_text, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
     data = ms.select(sql)
-    idx = random.randrange(len(data))
+    
+    if mode == "importance":
+        scores = [d[1] for d in data]
+        idx = np.argmax(scores)
+
+    else:
+        # This mode is useful if the importance mode selects the same text. This is because Twitter does not show the same text in the short time.
+        idx = random.randrange(len(data))
 
     post_tweet(data[idx][0])
 

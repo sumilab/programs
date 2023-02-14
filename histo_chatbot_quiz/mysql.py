@@ -2,7 +2,7 @@
 #!/usr/bin/python
 import MySQLdb
 
-def get_obj(host, db="histo_quiz"):
+def get_obj(host, db=""):
     '''
     The name of database of MySQL is inputted as the parameter db
     '''
@@ -12,8 +12,8 @@ def get_obj(host, db="histo_quiz"):
 
 class MySQL:
     def __init__(self):
-        self.user = 'test'   ## Input the username of MySQL
-        self.passwd = 'test' ## Input the password of the username 
+        self.user = ''   ## Input the username of MySQL
+        self.passwd = '' ## Input the password of the username 
 
     def set_connection(self, dbname, hst):
         self.con = MySQLdb.connect(

@@ -72,3 +72,15 @@ def use_twitter_api(url, params, get=True):
 
     return data
 
+def event_importance(event_ids):
+    impl_scores = []
+    for evt_id in event_ids:
+        total = each_event_importance(evt_id)
+        impl_scores.append(total)
+    return impl_scores, np.argsort(impl_scores)[::-1]
+
+def each_event_importance(event_id):
+    sql = "select score from event_importance where event_id = " + str(event_id)
+    data = ms.select(sql)
+    if len(data) < 1 or len(data[0]) < 1: return 0
+    return data[0][0]
