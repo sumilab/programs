@@ -110,7 +110,7 @@ def post_quiz(ipts, qfvecs, qids, p, mode="tokens", qmode="importance"):
                 data = ms.select(sql)
 
                 scores = [d[1] for d in data]
-                idx = np.argmax(scores)
+                idx = np.argmax(scores) # One good method is to record the selections made for each day so that they can be displayed one by one, starting with those with the highest scores.
 
             else:
                 data = ms.select(qsql)
@@ -306,11 +306,11 @@ def post_calendar_quiz(time, lang, mode="importance"):
         # This mode is useful if the importance mode selects the same text. This is because Twitter does not show the same text in the short time.
         idx = random.randrange(len(data))
 
-    post_tweet(data[idx][0])
+    post_tweet(data[idx][0], p="Calendar-based ")
 
     
 def post_tweet(otxt, url="https://api.twitter.com/1.1/statuses/update.json", p=""):
-    txt = p + "Calendar-based History Quiz: " + otxt
+    txt = p + "History Quiz: " + otxt
     params = {"status":txt}
     use_twitter_api(url, params, get=False)
 
