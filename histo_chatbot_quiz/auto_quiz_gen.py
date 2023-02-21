@@ -21,6 +21,34 @@ path = "." # Set the path where this program is located.
 list_id = int("") # Set the link of Twitter list including Twitter users.
 current_news_user_list = "https://api.twitter.com/1.1/lists/members.json"
 
+def get_ymd():
+    current_day = datetime.datetime.now()
+    date = current_day.date()
+    y, m, d = date.year, date.month, date.day
+    return [y, m, d]
+ 
+
+def store_posted_quiz(y, m, d, data):
+    fname = path + "/posted_quiz.pkl"
+    qdata = {}
+    qdata[y] = {}
+    qdata[y][m] = {}
+    qdata[y][m][d] = data
+    pickle.dump(qdata, open(fname, 'wb'), protocol=2)
+
+    
+def load_posted_calendar_quiz(y, m, d):
+    fname = path + "/posted_quiz.pkl"
+    try:
+        qdata = pickle.load(open(fname, "rb"))
+    except:
+        return None
+    
+    if y not in qdata or m not in qdata[y] or d not in qdata[y][m]:
+        return None
+    
+    return qdata[y][m][d]
+
 def post_current_news_quiz(time, lang):
     fname = "the_last_news_account_pos.pkl"
     pos = load_pkl_file(fname) + 1
@@ -98,24 +126,34 @@ def post_quiz(ipts, qfvecs, qids, p, mode="tokens", qmode="importance"):
             if val > 0.0:
                 sval.append(val)
                 targets.append(qids[i])
+                
 
         if len(targets) > 0:
             idx = np.argmax(sval)
             qid = targets[idx]
+            ymd = get_ymd()
+            qdata = load_posted_calendar_quiz(ymd[0], ymd[1], ymd[2])
 
             qsql = "select quiz_text, quiz_id from quiz where quiz_id = " + str(qid)
 
-            if qmode == "importance":
-                sql = "select quiz_text, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
-                data = ms.select(sql)
+            if qdata is None: qdata = []
 
-                scores = [d[1] for d in data]
-                idx = np.argmax(scores) # One good method is to record the selections made for each day so that they can be displayed one by one, starting with those with the highest scores.
+            if qmode == "importance":
+                sql = "select quiz_text, q.quiz_id, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
+                data = ms.select(sql)
+                scores = []
+                for d in data:
+                    if d[1] in qdata: continue
+                    scores.append(d[2])
+                idx = np.argmax(scores)
+                qid = data[idx][1]
+                qdata.append(qid)
+                store_posted_quiz(ymd[0], ymd[1], ymd[2], qdata)
 
             else:
                 data = ms.select(qsql)
                 idx = random.randrange(len(data))
-            
+
             qtext = data[idx][0]
             post_tweet(qtext, p=p)
 
@@ -278,34 +316,30 @@ def make_fvec(tlists, p=path+"/models/quiz", nb=3, na=0.3, tnum=100, mode="word"
     return tlists
 
 
-def pickup_text_similar_quiz(time, lang, tokens=[], topics=[]):
-    """
-    tokens: using tokens to load quiz texts from database with AND/OR operators
-    topics: using as a feature vector to measure similarity from quiz texts 
-    """
-    y, m, d = time[0], time[1], time[2]
-    sql = "select quiz_text, year, month, day from quiz"
-    cond = " where lang = '" + lang + "'"
-    if len(tokens) > 0:
-        for t in tokens:
-            cond += " AND quiz_text like %" + t + "%"
-        print(sql + cond)
-
 
 def post_calendar_quiz(time, lang, mode="importance"):
-    y, m, d = time[0], time[1], time[2]
-    qsql = "select quiz_text, quiz_id from quiz where lang = '" + lang + "' AND ((year=" + str(y) + ") OR (month=" + str(m) + " AND day=" + str(d) + "))"
-    sql = "select quiz_text, score from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
+    y, m, day = time[0], time[1], time[2]
+    qdata = load_posted_calendar_quiz(y, m, day)
+    if qdata is None: qdata = []
+    
+    qsql = "select quiz_text, quiz_id from quiz where lang = '" + lang + "' AND ((year=" + str(y) + ") OR (month=" + str(m) + " AND day=" + str(day) + "))"
+    sql = "select quiz_text, score, q.quiz_id from event_importance as e inner join (" + qsql + ") as q on e.event_id = q.quiz_id"
     data = ms.select(sql)
     
     if mode == "importance":
-        scores = [d[1] for d in data]
+        scores = []
+        for d in data:
+            if d[2] in qdata: continue
+            scores.append(d[1])
         idx = np.argmax(scores)
 
     else:
-        # This mode is useful if the importance mode selects the same text. This is because Twitter does not show the same text in the short time.
         idx = random.randrange(len(data))
 
+    qid = data[idx][2]
+    qdata.append(qid)
+    store_posted_quiz(y, m, day, qdata)
+    
     post_tweet(data[idx][0], p="Calendar-based ")
 
     
