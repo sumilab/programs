@@ -1,4 +1,4 @@
-This program is an implementation of [HistoChatbot](https://mobile.twitter.com/HistoChatbot). 
+This program is a part of implementation of [HistoChatbot](https://mobile.twitter.com/HistoChatbot). 
 The main program is `auto_quiz_gen.py`.
 
 # Organization
