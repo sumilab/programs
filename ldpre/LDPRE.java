@@ -15,11 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-//import java.util.Enumeration;
-//import java.util.Hashtable;
-//import java.util.Stack;
-//import java.util.Vector;
-
 import coins.backend.Data;
 import coins.backend.Function;
 import coins.backend.LocalTransformer;
@@ -29,7 +24,6 @@ import coins.backend.ana.Dominators;
 import coins.backend.cfg.BasicBlk;
 import coins.backend.lir.LirLabelRef;
 import coins.backend.lir.LirNode;
-import coins.backend.lir.LirSymRef;
 import coins.backend.sym.Label;
 import coins.backend.sym.Symbol;
 import coins.backend.util.BiLink;
@@ -51,16 +45,13 @@ public class LDPRE implements LocalTransformer {
     private SsaSymTab sstab;
     private Util util;
     private Function f;
-    // Copy Propagation
-    private DDCPYP cpy;
     private DFST dfst;
     public Dominators dom;
     Lattice lattice = new Lattice();
-    HashMap<LirNode, boolean[]> visitedPREQPExp;
-    HashMap<LirNode, boolean[]> preqp_Answer;
+    HashMap<LirNode, boolean[]> visitedDExp;
+    HashMap<LirNode, boolean[]> dAnswer;
     HashMap<LirNode, int[]> visitedExp;
     HashMap<LirNode, int[]> dfvisitedExp;
-    HashMap<LirNode, boolean[]> dfPREQPvisitedExp;
     boolean[] insertPhiBlk;
     LirNode[] sameExpVars;
     LirNode[] sameExpVarFlow;
@@ -72,7 +63,7 @@ public class LDPRE implements LocalTransformer {
     HashMap<Integer, HashMap<LirNode,HashMap<Label,LirNode>>> pcc;
     HashSet<Integer> stores;
     
-    boolean printRemoving = false;
+//    boolean printRemoving = false;
     
     /**
      * Constructor
@@ -162,7 +153,6 @@ public class LDPRE implements LocalTransformer {
                         else {
                             blkExps.put(exp.makeCopy(env.lir),node.kid(0).makeCopy(env.lir));
                         }
-//                        blkExps.put(exp.makeCopy(env.lir),node.kid(0).makeCopy(env.lir));
                     }
                 }
                     
@@ -192,12 +182,6 @@ public class LDPRE implements LocalTransformer {
         			return true;
         		}
     		}
-//    		System.out.println("");
-//    		System.out.println(node.kid(1).kid(0)+":"+blkKills.contains(node.kid(1).kid(0)));
-//    		System.out.println(node.kid(1).kid(1)+":"+blkKills.contains(node.kid(1).kid(1)));
-//    		if(blkKills.contains(node.kid(1).kid(0)) || blkKills.contains(node.kid(1).kid(1))) {
-//    			return true;
-//    		}
     	}
 		
 		return false;
@@ -206,12 +190,9 @@ public class LDPRE implements LocalTransformer {
     
     LirNode createNewStatement(LirNode statement) {
     	LirNode newSt = statement.makeCopy(env.lir);
-    	//System.out.println("Checking newSt");
-    	//System.out.println(newSt);
     	Symbol dstSym = sstab.newSsaSymbol(tmpSymName, newSt.type);
     	LirNode nn = env.lir.symRef(Op.REG, dstSym.type, dstSym, ImList.Empty);
     	LirNode newNode = env.lir.operator(Op.SET, newSt.type, nn, newSt.kid(1),ImList.Empty).makeCopy(env.lir);
-    	//System.out.println("new node:"+newNode);
     	insertedNewNodes.add(newNode);
     	return newNode;
     }
@@ -248,7 +229,6 @@ public class LDPRE implements LocalTransformer {
     	HashMap<Label,LirNode> plabel2var = new HashMap<Label,LirNode>();
     	
     	LirNode phi = newPhi(node, blk, tmpSymName);
-//    	sameExpVars[blk.id] = phi.kid(0);
     	LirNode pdst = phi.kid(0);
     	LirNode args = null;
     	boolean allSame = true;
@@ -289,8 +269,7 @@ public class LDPRE implements LocalTransformer {
 		}
     	
     	if(allSame) return null;
-//    	printBBs();
-//    	System.out.println("new phi:"+phi);
+    	
     	phi = phi.makeCopy(env.lir);
     	BiLink pl = blk.instrList().first();
 		pl.addBefore(phi);
@@ -332,22 +311,16 @@ public class LDPRE implements LocalTransformer {
     	}
     	
 		if(blk.predList().length() > 1) {
-//			printBBs();
-//			System.out.println("phiArgMap:"+phiArgMap+", @"+blk.label());
 			insertPhi(node, blk, phiArgMap);
 		}
     }
     
     int NAvail(LirNode node, BasicBlk v) {
-//    	System.out.println("NAvail @ " + v.label() + ". node:" + node + ". pred:"+v.predList().length());
-
     	int[] visited = getVisited(node.kid(1));
     	if(v.predList().length()==0) {
     		visited[v.id] = lattice.False;
     		return visited[v.id];
     	}
-    	
-//    	HashMap<Integer,LirNode> p2n = new HashMap<Integer,LirNode>();
     	
     	int answers = 0;
     	ArrayList<BasicBlk> trues = new ArrayList<BasicBlk>();
@@ -379,58 +352,25 @@ public class LDPRE implements LocalTransformer {
     		if(pans == lattice.True) trues.add(p);
         	if(pans == lattice.False) falses.add(p);
         	if(pans == lattice.Top) {
-//        		if(dom.dominates(v, p)) {
-//        			if(trues.size() > 0) {
-//        				trues.add(p);
-//        			}
-//        			else if(falses.size() > 0) {
-//        				falses.add(p);
-//        			}
-//        		}
-//        		else {
-//        			tops.add(p);
-//        		}
         		tops.add(p);
         	}
-        	
-//        	System.out.println("");
-//    		System.out.println("v:"+v.label());
-//    		System.out.println("pred:"+p.label());
-//    		System.out.println("newNode:"+newNode);
-//    		System.out.println("pred answer:"+pans);
-//    		System.out.println("phiArgMap:"+phiArgMap);
-//    		System.out.println("sameExpVarFlow[v.id]:"+sameExpVarFlow[v.id]);
-//    		System.out.println("predSameExpVar:"+predSameExpVar);
-//    		System.out.println("before current answer:"+answers);
         	
     		if(answers == 0) {
         		answers = pans;
         	}
         	else {
-//        		answers = lattice.l_or(answers, pans);
         		answers = lattice.l_and(answers, pans);
         	}
-    		
-//    		System.out.println("after current answer:"+answers+"@"+v.label());
     	}
     	
     	// Insert
     	if(trues.size() > 0) {
-//    		if(falses.size() > 0 || tops.size() > 0) {
     		if(falses.size() > 0 || tops.size() > 0 && !allTopDomied(v,tops)) {
     			boolean dsafe = true;
         		for(int i=0;i<falses.size();i++) {
         			BasicBlk p = falses.get(i);
         			LirNode newNode = p2n.get(p);
-//        			System.out.println("");
-//        			System.out.println("Check DSafe..:" + p.label());
-//        			System.out.println("Result of DSafe "+XDSafe(p,newNode));
-//        			if(XDSafe(p,newNode) != lattice.True) {
-//        				dsafe = false;
-//        				break;
-//        			}
-//        			if(XDSafe(p,newNode) != lattice.True) {
-        			if(!preqp_XDSafe(p,newNode)) {
+        			if(!XDSafe(p,newNode)) {
         				dsafe = false;
         				break;
         			}
@@ -439,28 +379,13 @@ public class LDPRE implements LocalTransformer {
         		for(int i=0;i<tops.size();i++) {
         			BasicBlk p = tops.get(i);
         			LirNode newNode = p2n.get(p);
-//        			System.out.println("");
-//        			System.out.println("Check DSafe..:" + p.label());
-//        			System.out.println("Result of DSafe "+XDSafe(p,newNode));
-//        			if(XDSafe(p,newNode) != lattice.True) {
-//        				dsafe = false;
-//        				break;
-//        			}
-//        			if(XDSafe(p,newNode) != lattice.True) {
-        			if(!preqp_XDSafe(p,newNode)) {
+        			if(!XDSafe(p,newNode)) {
         				dsafe = false;
         				break;
         			}
         		}
         		
         		if(dsafe) {
-//        			System.out.println("");
-//        			System.out.println("");
-//        			System.out.println("* node *");
-//        			System.out.println("phiArgMap:"+phiArgMap);
-//        			System.out.println("trues:"+trues);
-//        			System.out.println("falses:"+falses);
-//        			System.out.println("tops:"+tops);
         			insert(node, v, trues, falses, tops, p2n, phiArgMap);
             		answers = lattice.True;
         		}
@@ -471,73 +396,12 @@ public class LDPRE implements LocalTransformer {
     		else {
     			answers = lattice.True;
     			if(trues.size() > 1 && trues.size() == v.predList().length()) {
-//        			System.out.println("");
-//        			System.out.println("");
-//        			System.out.println("*** node ***");
-//        			System.out.println("phiArgMap:"+phiArgMap);
-//        			System.out.println("trues:"+trues);
-//        			System.out.println("falses:"+falses);
-//        			System.out.println("tops:"+tops);
     	    		insertPhi(node, v, phiArgMap);
-//    	    		answers = lattice.True;
     	    	}
     		}
     	}
-//    	else if(falses.size() > 0 && tops.size() > 0) {
-//    		answers = lattice.False;
-//    	}
-//    	if(trues.size() > 0 && falses.size() > 0) {
-//    		boolean dsafe = true;
-//    		for(int i=0;i<falses.size();i++) {
-//    			BasicBlk p = falses.get(i);
-//    			LirNode newNode = p2n.get(p);
-////    			System.out.println("");
-////    			System.out.println("Check DSafe..:" + p.label());
-////    			System.out.println("Result of DSafe "+XDSafe(p,newNode));
-////    			if(XDSafe(p,newNode) != lattice.True) {
-////    				dsafe = false;
-////    				break;
-////    			}
-//    			if(!preqp_XDSafe(p,newNode)) {
-//    				dsafe = false;
-//    				break;
-//    			}
-//    		}
-//    		
-//    		if(dsafe) {
-//    			insert(node, v, trues, falses, tops, p2n, phiArgMap);
-//        		answers = lattice.True;
-//    		}
-//    		else {
-//    			answers = lattice.False;
-//    		}
-//    	}
-//    	else if(trues.size() > 1 && trues.size() == v.predList().length() && answers == lattice.True) {
-//    		insertPhi(node, v, phiArgMap);
-//    	}
-//    	else if(trues.size() > 0 && trues.size() == v.predList().length()) {
-//    		answers = lattice.True;
-//    	}
-//    	else if(falses.size() > 0 && falses.size() == v.predList().length()) {
-//    		answers = lattice.False;
-//    	}
-//    	else if(tops.size() > 0 && tops.size() == v.predList().length()) {
-//    		answers = lattice.Top;
-//    	}
-//    		if(trues.size() > 0 && falses.size() > 0) {
-//        		insert(node, v, trues, falses, tops, p2n, phiArgMap);
-//        		answers = lattice.True;
-//        	}
-//        	else if(trues.size() > 1 && trues.size() == v.predList().length() && answers == lattice.True) {
-//        		insertPhi(node, v, phiArgMap);
-//        	}
-//    	if(answers == 0) {
-//    		answers = lattice.False;
-//    	}
     	
     	visited[v.id] = answers;
-    	
-//    	System.out.println("result@"+v.label()+". "+visited[v.id]);
     	
  	   	return visited[v.id];
     }
@@ -554,12 +418,10 @@ public class LDPRE implements LocalTransformer {
     
     int XAvail(LirNode node, BasicBlk v) {
     	int[] visited = getVisited(node.kid(1));
-//    	System.out.println("XAvail @ " + v.label() + ". node:" + node + ". visited:" + visited[v.id]);
     	
     	if(visited[v.id] == lattice.Bot) {
     		visited[v.id] = lattice.Top;
     		return visited[v.id];
-//			return lattice.Top;
     	}
 		else if(visited[v.id] == lattice.True || visited[v.id] == lattice.False || visited[v.id] == lattice.Top) {
 			return visited[v.id];
@@ -581,7 +443,6 @@ public class LDPRE implements LocalTransformer {
     	
     	visited[v.id] = NAvail(node, v);
     	return visited[v.id];
-// 	   	return NAvail(node, v);
     }
     
     int[] getVisited(LirNode exp) {
@@ -595,14 +456,14 @@ public class LDPRE implements LocalTransformer {
     	}
     }
     
-    boolean[] getPREQPVisited(LirNode exp) {
-    	if(visitedPREQPExp.containsKey(exp)) {
-    		return visitedPREQPExp.get(exp);
+    boolean[] getDVisited(LirNode exp) {
+    	if(visitedDExp.containsKey(exp)) {
+    		return visitedDExp.get(exp);
     	}
     	else {
     		boolean[] visited = new boolean[f.flowGraph().idBound()];
     		Arrays.fill(visited, false);
-    		visitedPREQPExp.put(exp, visited);
+    		visitedDExp.put(exp, visited);
     		return visited;
     	}
     }
@@ -618,48 +479,9 @@ public class LDPRE implements LocalTransformer {
     	}
     }
     
-    boolean[] getPREQPDSafeVisited(LirNode exp) {
-    	if(dfPREQPvisitedExp.containsKey(exp)) {
-    		return dfPREQPvisitedExp.get(exp);
-    	}
-    	else {
-    		boolean[] visited = new boolean[f.flowGraph().idBound()];
-    		Arrays.fill(visited, false);
-    		dfPREQPvisitedExp.put(exp, visited);
-    		return visited;
-    	}
-    }
-    
-    int NDSafe(BasicBlk v, LirNode node) {
-    	int[] visited = getDSafeVisited(node.kid(1));
-    	
-    	if(visited[v.id] == lattice.Bot) {
-			return lattice.Top;
-    	}
-		else if(visited[v.id] > 0) {
-			return visited[v.id];
-		}
-    	
-    	visited[v.id] = lattice.Bot;
-    	
-    	LirNode sameExpVar = checkLocalRedundant(node.kid(1), v);
-    	if(sameExpVar != null) {
-    		visited[v.id] = lattice.True;
-//    		sameExpVars[v.id] = sameExpVar;
-    		return visited[v.id];
-    	}
-    	
-//    	if(isKillBlk(v, node)) {
-//    		visited[v.id] = lattice.False;
-//    		return visited[v.id];
-//    	}
-    	
- 	   	return XDSafe(v, node);
-    }
-    
-    boolean preqp_NDSafe(BasicBlk v, LirNode node) {
-    	boolean[] visited = getPREQPVisited(node.kid(1));
-    	boolean[] answers = pre_qp_GetAnswer(node.kid(1));
+    boolean NDSafe(BasicBlk v, LirNode node) {
+    	boolean[] visited = getDVisited(node.kid(1));
+    	boolean[] answers = dGetAnswer(node.kid(1));
     	
     	if(visited[v.id]) {
 			return answers[v.id];
@@ -670,7 +492,6 @@ public class LDPRE implements LocalTransformer {
     	LirNode sameExpVar = checkLocalRedundant(node.kid(1), v);
     	if(sameExpVar != null) {
     		answers[v.id] = true;
-//    		sameExpVars[v.id] = sameExpVar;
     		return answers[v.id];
     	}
     	
@@ -679,40 +500,13 @@ public class LDPRE implements LocalTransformer {
     		return answers[v.id];
     	}
     	
-    	boolean ans = preqp_XDSafe(v, node);
+    	boolean ans = XDSafe(v, node);
     	answers[v.id] = ans;
  	   	return answers[v.id];
     }
 
     
-    int XDSafe(BasicBlk v, LirNode node) {
-//    	System.out.println("@XDSafe "+v.label());
-    	if(v.succList().length()==0) {
-    		return lattice.False;
-    	}
-    	
-    	int answers = 0;
-    	for(BiLink pp=v.succList().first();!pp.atEnd();pp=pp.next()) {
-    		BasicBlk s = (BasicBlk)pp.elem();
-    		
-    		LirNode newNode = updateSSAExp(node, s, v, false);
-//    		System.out.println("@XDSafe " + node + " -> " + newNode + " for "+s.label());
-    		int sans = NDSafe(s, newNode);
-    		
-    		if(sans == lattice.False) return lattice.False;
-    		
-    		if(answers == 0) {
-        		answers = sans;
-        	}
-        	else {
-        		answers = lattice.l_or(answers, sans);
-        	}
-    	}
-    	return answers;
-    }
-    
-    boolean preqp_XDSafe(BasicBlk v, LirNode node) {
-//    	System.out.println("@XDSafe "+v.label());
+    boolean XDSafe(BasicBlk v, LirNode node) {
     	if(v.succList().length()==0) {
     		return false;
     	}
@@ -721,8 +515,7 @@ public class LDPRE implements LocalTransformer {
     		BasicBlk s = (BasicBlk)pp.elem();
     		
     		LirNode newNode = updateSSAExp(node, s, v, false);
-//    		System.out.println("@XDSafe " + node + " -> " + newNode + " for "+s.label());
-    		boolean sans = preqp_NDSafe(s, newNode);
+    		boolean sans = NDSafe(s, newNode);
     		
     		if(!sans) {
     			return false;
@@ -815,7 +608,7 @@ public class LDPRE implements LocalTransformer {
    }
    
    void invoke() {
-       long startTime = System.currentTimeMillis();
+//       long startTime = System.currentTimeMillis();
        
        // Initialization
        exps = new HashMap<Integer, HashMap<LirNode,LirNode>>();
@@ -830,26 +623,18 @@ public class LDPRE implements LocalTransformer {
        
        // Collecting local info and removing local redundancy
        collectLocalInfo();
-//     printBBs();
        
        // Global analysis
        BasicBlk[] bVecInOrderOfRPost = dfst.blkVectorByRPost();
-//     for(BiLink pp=f.flowGraph().basicBlkList.first();!pp.atEnd();pp=pp.next()){
        for (int i = 1; i <  bVecInOrderOfRPost.length; i++) {
             BasicBlk v = bVecInOrderOfRPost[i];
-//          BasicBlk v=(BasicBlk)pp.elem();
-//          if(v.id < 15 || v.id > 16) continue;
-//          if(v.id != 16) continue;
-//          if(bVecInOrderOfRPost.length > 140) continue;
             
             HashMap<LirNode,LirNode> blkExps = new HashMap<LirNode,LirNode>();
             HashMap<LirNode,LirNode> blkMems = new HashMap<LirNode,LirNode>();
             
             HashMap<LirNode, LirNode> valueMap = new HashMap<LirNode, LirNode>();
-            int pos = 0;
             for(BiLink p=v.instrList().first();!p.atEnd();p=p.next()){
                 LirNode node=(LirNode)p.elem();
-                 pos++;
                  
                  if(node.opCode == Op.SET) {
                      if(node.kid(0).opCode == Op.MEM) {
@@ -870,7 +655,7 @@ public class LDPRE implements LocalTransformer {
                      if(blkMems.containsKey(exp)) {
                     	 LirNode newExp = blkMems.get(exp).makeCopy(env.lir);
                          node.setKid(1, newExp);
-                         if(printRemoving) System.out.println("removing redundant exp");
+//                         if(printRemoving) System.out.println("removing redundant exp");
                          cpy(v,p.next(),node.kid(0),node.kid(1));
                          valueMap.put(node.kid(0), node.kid(1));
                      }
@@ -882,7 +667,7 @@ public class LDPRE implements LocalTransformer {
                 		 LirNode newExp = blkExps.get(exp).makeCopy(env.lir);
                 		 
                 		 node.setKid(1, newExp.makeCopy(env.lir));
-                		 if(printRemoving) System.out.println("removing redundant exp");
+//                		 if(printRemoving) System.out.println("removing redundant exp");
                 		 cpy(v,p.next(),node.kid(0),newExp);
                              
                 		 valueMap.put(node.kid(0), node.kid(1));
@@ -901,7 +686,7 @@ public class LDPRE implements LocalTransformer {
                 		 if(blkExps.containsKey(tmp)) {
                 			 LirNode newExp = blkExps.get(tmp);
                 			 node.setKid(1, newExp.makeCopy(env.lir));
-                			 if(printRemoving) System.out.println("removing redundant exp");
+//                			 if(printRemoving) System.out.println("removing redundant exp");
                 			 cpy(v,p.next(),node.kid(0),node.kid(1));
                 			 valueMap.put(node.kid(0), node.kid(1));
                 		 }
@@ -914,45 +699,16 @@ public class LDPRE implements LocalTransformer {
                  }
                  
                  if(node.kid(1).opCode == Op.INTCONST || node.kid(1).opCode == Op.FLOATCONST || node.kid(1).opCode == Op.REG) continue;
-//               if(node.kid(1).opCode != Op.MEM && (node.kid(1).nKids() < 2 || node.kid(1).kid(0).opCode != Op.REG && node.kid(1).kid(1).opCode != Op.REG)) continue;
                  if(isKillBlk(v,node)) continue;
                  
-//               if(pos != 3) continue;
-//               if(pos == 5 || pos == 9 || pos > 12)continue;
-//               if(node.kid(1).opCode != Op.MUL)continue;
-//               if(node.kid(1).kid(0).opCode != Op.REG && node.kid(1).kid(1).opCode != Op.REG)continue;
-//               if(node.kid(1).kid(0).opCode == Op.REG)continue;
-//               if(node.kid(1).nKids()<2)continue;
-//               if(v.id != 5) continue;
-//               if(v.instrList().length() == 2) continue;
-//               if(v.instrList().length() < 60) continue;
-//               printBBs();
-//               System.out.println("");
-//               System.out.println("");
-//               System.out.println("=== start query propagation ===");
-//               System.out.println("original node:"+node+". pos:"+pos);
-//               System.out.println("v. label:"+v.label());
-//               System.out.println("v. id:"+v.id);
-//               System.out.println("v.instrList().length():"+v.instrList().length());
-//               System.out.println("bVecInOrderOfRPost.length:"+bVecInOrderOfRPost.length);
-                 
-                 // LDPRE
-                 //propagate(node, v, p.next());
-                 
-                 // PREQP
-                 preqp_propagate(node, v, p.next());
-                 
-//               printBBs();
+                 propagate(node, v, p.next());
                  
             }
             
         }
        
-       long stopTime = System.currentTimeMillis();
-       System.out.println("Analyzing time:"+(stopTime-startTime));
-//     System.out.println("exp_num:"+exp_num);
-       
-//       printBBs();
+//       long stopTime = System.currentTimeMillis();
+//       System.out.println("Analyzing time:"+(stopTime-startTime));
    }
    
    void propagate(LirNode node, BasicBlk v, BiLink pp) {
@@ -962,8 +718,8 @@ public class LDPRE implements LocalTransformer {
 	   sameExpVarFlow = new LirNode[f.flowGraph().idBound()];
 	   sameExpVars = new LirNode[f.flowGraph().idBound()];
 	   insertPhiBlk = new boolean[f.flowGraph().idBound()];
-	   visitedPREQPExp = new HashMap<LirNode, boolean[]>();
-	   preqp_Answer = new HashMap<LirNode, boolean[]>();
+	   visitedDExp = new HashMap<LirNode, boolean[]>();
+	   dAnswer = new HashMap<LirNode, boolean[]>();
 	   
 	   int answer = NAvail(node,v);
 	   if(answer == lattice.True) {
@@ -981,27 +737,6 @@ public class LDPRE implements LocalTransformer {
 				   dblk = dom.immDominator(dblk);
 			   }
 			   
-			   if(dblk == null) {
-//				   printBBs();
-//				   System.out.println("original node:"+node);
-//				   
-				   dblk = dom.immDominator(v);
-				   while(dblk != null && sameExpVars[dblk.id] == null){
-					   System.out.println("dblk:"+dblk.label()+", sameExpVars[dblk.id]:"+sameExpVars[dblk.id]);
-					   dblk = dom.immDominator(dblk);
-				   }
-				   printBBs();
-				   System.out.println("node--"+node);
-				   System.out.println("v:"+v.label());
-				   System.out.println("ERROR?");
-				   System.exit(2);
-			   }
-			   
-//			   System.out.println("dblk:"+dblk.label());
-//			   if(sameExpVars[dblk.id] == null) {
-//				   System.out.println("ERROR?");
-//			   }
-			   
 			   if(!sameExpVars[dblk.id].equals(node.kid(0))) {
 				   p = sameExpVars[dblk.id];
 			   }
@@ -1010,29 +745,16 @@ public class LDPRE implements LocalTransformer {
 			   }
 		   }
 		   replace(node, p);
-//		   cpy.cpyp(v,node.kid(0),node.kid(1),1);
 		   cpy(v, pp, node.kid(0), node.kid(1));
 	   }
-//	   else if(answer == lattice.Top) {
-//		   printBBs();
-//		   System.out.println("TOP!!! "+node+" @ "+v.label());
-//		   System.exit(2);
-//	   }
    }
    
    void replace(LirNode node, LirNode t) {
-//	   printBBs();
-//	   System.out.println("before:" + node);
 	   node.setKid(1, t.makeCopy(env.lir));
-	   if(printRemoving) System.out.println("removing redundant exp");
-//	   System.out.println("after:"+node);
-//	   System.exit(2);
+//	   if(printRemoving) System.out.println("removing redundant exp");
    }
    
    void cpy(BasicBlk blk, BiLink p, LirNode from, LirNode to) {
-//     System.out.println("");
-//     System.out.println("===CPY===");
-//     System.out.println(from+"->"+to+"@"+blk.label());
        localCPYP(blk,p,from,to);
        
        for(BiLink pp=dom.kids[blk.id].first();!pp.atEnd();pp=pp.next()){
@@ -1107,227 +829,20 @@ public class LDPRE implements LocalTransformer {
 	   return is_target;
    }
    
-   void preqp_propagate(LirNode node, BasicBlk v, BiLink pp) {
-	   insertedBlk = new int[f.flowGraph().idBound()];
-	   visitedPREQPExp = new HashMap<LirNode, boolean[]>();
-	   preqp_Answer = new HashMap<LirNode, boolean[]>();
-	   dfvisitedExp = new HashMap<LirNode, int[]>();
-	   sameExpVarFlow = new LirNode[f.flowGraph().idBound()];
-	   sameExpVars = new LirNode[f.flowGraph().idBound()];
-	   insertPhiBlk = new boolean[f.flowGraph().idBound()];
-	   
-	   boolean answer = preqp_NAvail(node,v);
-	   if(answer) {
-		   BasicBlk dblk;
-		   if(insertPhiBlk[v.id]) {
-			   dblk = v;
-		   }
-		   else {
-			   dblk = dom.immDominator(v);
-		   }
-		   
-		   LirNode p = null;
-		   while(p == null) {
-			   while(dblk != null && sameExpVars[dblk.id] == null){
-				   dblk = dom.immDominator(dblk);
-			   }
-			   
-			   if(dblk == null) {
-//				   printBBs();
-//				   System.out.println("original node:"+node);
-//				   
-				   dblk = dom.immDominator(v);
-				   while(dblk != null && sameExpVars[dblk.id] == null){
-//					   System.out.println("dblk:"+dblk.label()+", sameExpVars[dblk.id]:"+sameExpVars[dblk.id]);
-					   dblk = dom.immDominator(dblk);
-				   }
-//				   System.out.println("ERROR?");
-//				   System.exit(2);
-			   }
-			   
-			   if(dblk == null) {
-				   return;
-			   }
-			   
-//			   System.out.println("dblk:"+dblk.label());
-//			   if(sameExpVars[dblk.id] == null) {
-//				   System.out.println("ERROR?");
-//			   }
-			   
-			   if(!sameExpVars[dblk.id].equals(node.kid(0))) {
-				   p = sameExpVars[dblk.id];
-			   }
-			   else {
-				   dblk = dom.immDominator(dblk);
-			   }
-		   }
-		   replace(node, p);
-//		   cpy.cpyp(v,node.kid(0),node.kid(1),1);
-		   cpy(v, pp, node.kid(0), node.kid(1));
-	   }
-   }
    
-   boolean preqp_NAvail(LirNode node, BasicBlk v) {
-	   if(v.predList().length()==0) {
-		   return false;
-	   }
-   	
-	   ArrayList<BasicBlk> trues = new ArrayList<BasicBlk>();
-	   ArrayList<BasicBlk> falses = new ArrayList<BasicBlk>();
-	   HashMap<BasicBlk, LirNode> p2n = new HashMap<BasicBlk,LirNode>();
-	   HashMap<Integer, LirNode> phiArgMap = new HashMap<Integer,LirNode>();
-	   
-	   for(BiLink pp=v.predList().first();!pp.atEnd();pp=pp.next()) {
-		   BasicBlk p = (BasicBlk)pp.elem();
-   		
-		   // prepare for query propagation
-		   LirNode newNode = updateSSAExp(node, v, p, true);
-		   p2n.put(p, newNode);
-   		
-		   // query propagation
-		   boolean pans = preqp_XAvail(newNode, p);
-		   LirNode predSameExpVar = sameExpVars[p.id];
-		   sameExpVarFlow[v.id] = sameExpVars[p.id];
-		   if(sameExpVarFlow[v.id] == null) sameExpVarFlow[v.id] = sameExpVarFlow[p.id];
-		   if(predSameExpVar != null) {
-			   phiArgMap.put(p.id, predSameExpVar);
-		   }
-		   
-		   // recording answers
-		   if(pans) trues.add(p);
-		   else falses.add(p);
-       	
-//       	System.out.println("");
-//   		System.out.println("v:"+v.label());
-//   		System.out.println("pred:"+p.label());
-//   		System.out.println("newNode:"+newNode);
-//   		System.out.println("pred answer:"+pans);
-//   		System.out.println("predSameExpVar:"+predSameExpVar);
-//   		System.out.println("before current answer:"+answers);
-       	
-	   }
-	   
-	   boolean answer = false;
-   	
-	   // Insert
-	   if(trues.size() > 0) {
-		   if(falses.size() > 0) {
-			   boolean dsafe = true;
-			   for(int i=0;i<falses.size();i++) {
-				   BasicBlk p = falses.get(i);
-				   LirNode newNode = p2n.get(p);
-				   if(!preqp_XDSafe(p,newNode)) {
-					   dsafe = false;
-					   break;
-				   }
-			   }
-	   		
-			   if(dsafe) {
-				   insert(node, v, trues, falses, new ArrayList<BasicBlk>(), p2n, phiArgMap);
-				   answer = true;
-			   }
-			   else {
-				   answer = false;
-			   }
-		   }
-		   
-		   if(trues.size() == v.predList().length()) {
-			   answer = true;
-			   if(trues.size() > 1) {
-				   insertPhi(node, v, phiArgMap);
-			   }
-		   }
-	   }
-//	   if(trues.size() > 0 && falses.size() > 0) {
-//		   boolean dsafe = true;
-//		   for(int i=0;i<falses.size();i++) {
-//			   BasicBlk p = falses.get(i);
-//			   LirNode newNode = p2n.get(p);
-//// 	  			System.out.println("");
-////   			System.out.println("Check DSafe..:" + p.label());
-////   			System.out.println("Result of DSafe "+XDSafe(p,newNode));
-//			   if(!preqp_XDSafe(p,newNode)) {
-//				   dsafe = false;
-//				   break;
-//			   }
-//		   }
-//		   
-////		   System.out.println("DSafe:"+dsafe);
-//   		
-//		   if(dsafe) {
-//			   insert(node, v, trues, falses, new ArrayList<BasicBlk>(), p2n, phiArgMap);
-//			   answer = true;
-//		   }
-//		   else {
-//			   answer = false;
-//		   }
-//	   }
-//	   else if(trues.size() > 1 && trues.size() == v.predList().length()) {
-//		   insertPhi(node, v, phiArgMap);
-//		   answer = true;
-//	   }
-//	   else if(trues.size() > 0 && trues.size() == v.predList().length()) {
-//		   answer = true;
-//	   }
-   	
-	   boolean[] visited = getPREQPVisited(node.kid(1));
-       visited[v.id] = true;
-       
-       boolean[] answers = pre_qp_GetAnswer(node.kid(1));
-       answers[v.id] = answer;
-   	
-//   		System.out.println("result@"+v.label()+". "+answers[v.id]+". trues:"+trues.size()+", v.preds:"+v.predList().length());
-   	
-	   return answers[v.id];
-   }
-   
-   
-   boolean preqp_XAvail(LirNode node, BasicBlk v) {
-	   boolean[] visited = getPREQPVisited(node.kid(1));
-//   	System.out.println("XAvail @ " + v.label() + ". node:" + node + ". visited:" + visited[v.id]);
-   	
-	   if(visited[v.id]) {
-		   boolean[] answers = pre_qp_GetAnswer(node.kid(1));
-		   return answers[v.id];
-	   }
-   	
-	   visited[v.id] = true;
-	   boolean[] answers = pre_qp_GetAnswer(node.kid(1));
-	   
-	   LirNode sameExpVar = checkLocalRedundant(node.kid(1), v);
-	   if(sameExpVar != null) {
-		   sameExpVars[v.id] = sameExpVar;
-		   answers[v.id] = true;
-		   return answers[v.id];
-	   }
-   	
-	   if(isKillBlk(v, node)) {
-		   visited[v.id] = true;
-		   answers[v.id] = false;
-		   return answers[v.id];
-	   }
-   	
-	   boolean ans = preqp_NAvail(node, v);
-	   answers[v.id] = ans;
-	   return answers[v.id];
-   }
-   
-   boolean[] pre_qp_GetAnswer(LirNode exp) {
-	   if(preqp_Answer.containsKey(exp)) {
-		   return preqp_Answer.get(exp);
+   boolean[] dGetAnswer(LirNode exp) {
+	   if(dAnswer.containsKey(exp)) {
+		   return dAnswer.get(exp);
 	   }
        else {
            boolean[] answers = new boolean[f.flowGraph().idBound()];
-           preqp_Answer.put(exp, answers);
+           dAnswer.put(exp, answers);
            return answers;
        }
   }
    
    public boolean doIt(Function function,ImList args) {
     	
-      //
-//      long startTime = System.currentTimeMillis();
-      //
     f = function;
     this.dom = (Dominators) f.require(Dominators.analyzer);
     env.println("****************** doing LDPRE to "+
@@ -1340,17 +855,11 @@ public class LDPRE implements LocalTransformer {
   }
  }
 
-
 class Lattice {
     int Top = 1;
     int Bot = 2;
     int True = 3;
     int False = 4;
-    
-    Lattice(){
-//        System.out.println(l_and(True,False));
-//        System.out.println(l_or(Top,True));
-    }
     
     String getType(int t) {
     	if(t == 1) {
