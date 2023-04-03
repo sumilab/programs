@@ -217,9 +217,6 @@ public class LDPRE implements LocalTransformer {
     	if(backward) {
     		if(!var2pmap.containsKey(var)) return var;
         	HashMap<Label,LirNode> plabel2var = var2pmap.get(var);
-//        	System.out.println("");
-//        	System.out.println("pred:"+pred.label());
-//        	System.out.println("plabel2var:"+plabel2var);
         	return plabel2var.get(pred.label());
     	}
     	else {
@@ -241,32 +238,20 @@ public class LDPRE implements LocalTransformer {
     	LirNode args = null;
     	boolean allSame = true;
     	
-
-//		System.out.println("");
-//		System.out.println("^^");
-//		System.out.println("phi:"+phi);
-		
     	for(int j=1;j<phi.nKids();j++){
 			BasicBlk pred = (((LirLabelRef) phi.kid(j).kid(1)).label).basicBlk();
 			LirNode predVar = phiArgMap.get(pred.id);
-			
-//			System.out.println("");
-//			System.out.println("pred:"+pred.label());
-//			System.out.println("predVar:"+predVar);
 			
 			if(predVar == null){
 				BasicBlk dblk = pred;
 				predVar = phi.kid(0);
 				while(dblk != null){
-//					System.out.println("dblk:"+dblk.label());
 					if(sameExpVars[dblk.id] != null) {
 						predVar = sameExpVars[dblk.id];
-//						System.out.println("Find pred var @ sameExpVars!!"+predVar);
 						break;
 					}
 					else if(sameExpVarFlow[dblk.id] != null) {
 						predVar = sameExpVarFlow[dblk.id];
-//						System.out.println("Find pred var @ sameExpVarFlow!!"+predVar);
 						break;
 					}
 					else if(dblk.id == blk.id) {
@@ -307,69 +292,10 @@ public class LDPRE implements LocalTransformer {
     	
     	if(phi==null) return null;
     	
-//    	HashMap<LirNode,HashMap<Label,LirNode>> var2pmap = pcc.get(blk.id);
-//    	HashMap<Label,LirNode> plabel2var = new HashMap<Label,LirNode>();
-//    	
-//    	LirNode pdst = phi.kid(0);
-//    	LirNode args = null;
-//    	boolean allSame = true;
-//    	
-//
-////		System.out.println("");
-////		System.out.println("^^");
-////		System.out.println("phi:"+phi);
-//		
-//    	for(int j=1;j<phi.nKids();j++){
-//			BasicBlk pred = (((LirLabelRef) phi.kid(j).kid(1)).label).basicBlk();
-//			LirNode predVar = phiArgMap.get(pred.id);
-//			
-////			System.out.println("");
-////			System.out.println("");
-//			
-//			if(predVar == null){
-//				BasicBlk dblk = pred;
-//				predVar = phi.kid(0);
-//				while(dblk != null){
-//					if(sameExpVars[dblk.id] != null) {
-//						predVar = sameExpVars[dblk.id];
-////						System.out.println("Find pred var @ sameExpVars!!"+predVar);
-//						break;
-//					}
-//					else if(sameExpVarFlow[dblk.id] != null) {
-//						predVar = sameExpVarFlow[dblk.id];
-////						System.out.println("Find pred var @ sameExpVarFlow!!"+predVar);
-//						break;
-//					}
-//					else if(dblk.id == blk.id) {
-//						break;
-//					}
-//					dblk = dom.immDominator(dblk);
-//				}
-//				
-//			}
-//			
-//			if(args==null) {
-//				args = predVar;
-//			}
-//			else if(!args.equals(predVar)) {
-//				allSame = false;
-//			}
-//			
-//			phi.kid(j).setKid(0, predVar);
-//			
-//			// recording PCC info
-//			Label l = ((LirLabelRef)phi.kid(j).kid(1)).label;
-//    		plabel2var.put(l, predVar);
-//		}
-//    	
-//    	if(allSame) return null;
     	phi = phi.makeCopy(env.lir);
     	BiLink pl = blk.instrList().first();
 		pl.addBefore(phi);
 		
-//		System.out.println("phi:"+phi);
-    	
-//		var2pmap.put(pdst, plabel2var);
 		insertPhiBlk[blk.id] = true;
 		sameExpVars[blk.id] = phi.kid(0);
     	return phi;
@@ -431,41 +357,27 @@ public class LDPRE implements LocalTransformer {
     		LirNode newNode = updateSSAExp(node, v, p, true).makeCopy(env.lir);
     		p2n.put(p, newNode);
 
-//    		System.out.println("");
-//    		System.out.println("pred:"+p.label());
-//    		System.out.println("pred node by newNode:"+newNode);
-    		
     		// query propagation
     		int pans = XAvail(newNode, p);
     		LirNode predSameExpVar = sameExpVars[p.id];
     		sameExpVarFlow[v.id] = sameExpVars[p.id];
     		if(sameExpVarFlow[v.id] == null && dom.dominates(p, v)) sameExpVarFlow[v.id] = sameExpVarFlow[p.id];
-//    		if(sameExpVarFlow[v.id] == null) sameExpVarFlow[v.id] = sameExpVarFlow[p.id];
     		if(predSameExpVar != null) {
-//    			System.out.println("add pred var by predSameExpVar for "+p.label()+" as "+predSameExpVar);
     			phiArgMap.put(p.id, predSameExpVar.makeCopy(env.lir));
     		}
     		else if(sameExpVarFlow[v.id] != null && dom.dominates(p, v)) {
-//    		else if(sameExpVarFlow[v.id] != null) {
-//    			System.out.println("add pred var by sameExpVarFlow for "+p.label()+" as "+sameExpVarFlow[v.id]);
     			phiArgMap.put(p.id, sameExpVarFlow[v.id].makeCopy(env.lir));
     		}
     		
     		// recording answers
-//    		System.out.println("");
-//    		System.out.println("pred:"+p.label());
-//    		System.out.println("pred node by p2n:"+p2n.get(p));
     		if(pans == lattice.True) {
     			trues.add(p);
-//        		System.out.println("answer: true");
     		}
         	if(pans == lattice.False) {
         		falses.add(p);
-//        		System.out.println("answer: false");
         	}
         	if(pans == lattice.Top) {
         		tops.add(p);
-//        		System.out.println("answer: top");
         	}
         	
     		if(answers == 0) {
@@ -488,7 +400,6 @@ public class LDPRE implements LocalTransformer {
         			answers = lattice.False;
         		}
     		}
-//    		else if(tops.size() > 0 && notLoop(trues, tops)) {
        		else if(tops.size() > 0) {
         		answers = lattice.True;
         		LirNode phi = newPhi(node, v, tmpSymName);
@@ -815,31 +726,8 @@ public class LDPRE implements LocalTransformer {
                  if(node.kid(1).opCode == Op.INTCONST || node.kid(1).opCode == Op.FLOATCONST || node.kid(1).opCode == Op.REG) continue;
                  if(isKillBlk(v,node)) continue;
                  
-//                 if(debug) continue;
-                 
-//                 if(v.id != 5) continue;
-//                 if(pos != 3) continue;
-//                 if(node.kid(1).opCode != Op.MUL) continue;
-//                 if(node.kid(1).kid(1).opCode != Op.REG) continue;
-//                 if(v.instrList().length() < 40) continue;
-                 
-//                 System.out.println("");
-//                 System.out.println("===");
-//                 System.out.println("node:"+node);
-//                 System.out.println("******** exp num:"+v.instrList().length());
-//                 System.out.println("v:"+v.id);
-//                 System.out.println("v:"+v.label());
-//                 System.out.println("pos:"+pos);
                  propagate(node, v, p.next());
                  
-//                 if(debug) {
-//         			printBBs();
-//                    System.out.println("");
-//                    System.out.println("===");
-//                    System.out.println("node:"+node);
-//                    System.out.println("v:"+v.label());
-//         			System.exit(2);
-//                 }
             }
             
         }
@@ -849,7 +737,6 @@ public class LDPRE implements LocalTransformer {
    }
    
    void laterPhiInsertion(LirNode node) {
-//	   printBBs();
 	   for(int i=0;i<laterPhiInserts.size();i++) {
 		   ArrayList pdata = (ArrayList)laterPhiInserts.get(i);
 		   HashMap<Integer, LirNode> phiArgMap = (HashMap)pdata.get(0);
@@ -861,8 +748,6 @@ public class LDPRE implements LocalTransformer {
 			   LirNode newNode = node.makeCopy(env.lir);
 			   newNode.setKid(0, latestPhi.kid(0));
 			   newNode.setKid(1, latestPhi.kid(1).kid(0));
-//			   System.out.println("cancel..:"+phi);
-//			   phi = latestPhi.makeCopy(env.lir);
 			   
 			   for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()) {
 				   LirNode n = (LirNode)p.elem();
@@ -878,9 +763,6 @@ public class LDPRE implements LocalTransformer {
 		   }
 			
 	   }
-	   
-//	   printBBs();
-//	   System.exit(2);
    }
    
    void propagate(LirNode node, BasicBlk v, BiLink pp) {
