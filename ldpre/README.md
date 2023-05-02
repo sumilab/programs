@@ -9,3 +9,5 @@ Example of compilation
 * `ldpre`: applying LDPRE
 * `srd3`: converting program from SSA form to normal form
 
+# Publication
+1. Yuya Yanase and Yasunobu Sumikawa, [Lazy Demand-Driven Partial Redundancy Elimination](https://www.ipsj.or.jp/english/jip/index.html), Journal of Information Processing, 2023, accepted.
