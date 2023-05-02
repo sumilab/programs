@@ -6,6 +6,6 @@ Example of compilation
 * `esplt`: critical edge elimination
 * `divex`: making each statement three-address code
 * `prun`: converting program from normal form to SSA form
-* `dce`: applying LDPRE
+* `ldpre`: applying LDPRE
 * `srd3`: converting program from SSA form to normal form
 
