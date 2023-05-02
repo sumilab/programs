@@ -5,6 +5,7 @@ Example of compilation
 
 * `esplt`: critical edge elimination
 * `divex3`: applying DivideExpression3 that extracts array references
+* `glia`: applying GLIA
 * `prun`: converting program from normal form to SSA form
 * `dce`: applying dead code elimination
 * `srd3`: converting program from SSA form to normal form
