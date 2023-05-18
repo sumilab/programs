@@ -5,9 +5,9 @@ Example of compilation
 
 * `esplt`: critical edge elimination
 * `divex`: making each statement three-address code
-* `prun`: converting program from normal form to SSA form
+* `prun`: converting program from the normal form to the SSA form
 * `ldpre`: applying LDPRE
-* `srd3`: converting program from SSA form to normal form
+* `srd3`: converting program from the SSA form to the normal form
 
 # Publication
-1. Yuya Yanase and Yasunobu Sumikawa, [Lazy Demand-Driven Partial Redundancy Elimination](https://www.ipsj.or.jp/english/jip/index.html), Journal of Information Processing, 2023, accepted.
+1. Yuya Yanase and Yasunobu Sumikawa, [Lazy Demand-Driven Partial Redundancy Elimination](https://sumilab.github.io/web/pdf/2023/jip_ldpre.pdf), Journal of Information Processing, 2023, accepted.
