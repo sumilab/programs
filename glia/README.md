@@ -6,9 +6,9 @@ Example of compilation
 * `esplt`: critical edge elimination
 * `divex3`: applying DivideExpression3 that extracts array references
 * `glia`: applying GLIA
-* `prun`: converting program from normal form to SSA form
+* `prun`: converting program from the normal form to the SSA form
 * `dce`: applying dead code elimination
-* `srd3`: converting program from SSA form to normal form
+* `srd3`: converting program from the SSA form to the normal form
 
 # Publication
 1. Yasunobu Sumikawa and Munehiro Takimoto, [Global Load Instruction Aggregation Based on Dimensions of Arrays](https://www.sciencedirect.com/science/article/abs/pii/S0045790615003067), Computers and Electrical Engineering, Elsevier, Vol. 50, pp. 180 -- 199, 2016.
