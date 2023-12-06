@@ -81,4 +81,4 @@ Based on this data, we evaluated the rate of correct quizzes that the chatbot se
 We found that incorrect quizzes were often chosen when the entity or trending word was not uniquely defined (e.g., Amazon). In the future, to improve the quiz selection accuracy one could use clarification responses asking about the correct named entity, or more complex methods to disambiguate entities could be proposed. 
 
 # Publication
-1. Yasunobu Sumikawa and Adam Jatowt, [HistoChatbot: Educating History by Generating Quizzes in Social Network Services](https://sumilab.github.io/web/pdf/2023/icadl_2023.pdf), In Proceedings of the 25th International Conference on Asia-Pacific Digital Libraries, ICADL'23, pp.28-35, Springer, 2023.
+1. Yasunobu Sumikawa and Adam Jatowt, [HistoChatbot: Educating History by Generating Quizzes in Social Network Services](https://sumilab.github.io/web/pdf/2023/icadl_2023.pdf), In Proceedings of the 25th International Conference on Asia-Pacific Digital Libraries, ICADL'23, Springer, accepted.
