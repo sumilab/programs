@@ -8,7 +8,6 @@ import datetime
 
 from util import ms
 from util import abs_path
-
 from util import make_page_name
 from util import get_texts
 from util import get_tweet_maxleng

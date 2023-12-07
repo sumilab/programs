@@ -2,7 +2,7 @@
 #!/usr/bin/python
 import MySQLdb
 
-def get_obj(host, db="twitter"):
+def get_obj(host, db="twitter_histo_chatbot"):
     ms = MySQL()
     ms.set_connection(db, host)
     return ms
