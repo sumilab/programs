@@ -2,7 +2,7 @@ This program is a part of implementation of [HistoChatbot](https://mobile.twitte
 The main programs are `auto_tweet.py` and `auto_reply.py`.
 
 # Python version
-* All python programs were implemented with Python 2.7. If you run these programs with Python 3, it may need to rerwrite handling Japanese texts, e.g., removing encoding and decoding, and to use up-to-date libraries including `requests_oauthlib`.
+* All python programs were implemented with Python 2.7. If you run these programs with Python 3, it may need to rewrite handling Japanese texts, e.g., removing encoding and decoding, and to use up-to-date libraries including `requests_oauthlib`.
 
 
 # Organization
