@@ -8,4 +8,4 @@ Example of compilation
 * `gsa`: applying GSA
 
 # Publication
-1. Tomohiro Sano and Yasunobu Sumikawa, [Global Store Statement Aggregation](https://sumilab.github.io/web/pdf/2023/paap_2023.pdf), In Proceedings of the 14th International Symposium on Parallel Architectures, Algorithms and Programming, PAAP'23, pp. 1-6, IEEE, 2023.
+1. Tomohiro Sano and Yasunobu Sumikawa, [Global Store Statement Aggregation](https://sumilab.github.io/web/pdf/2023/paap_2023.pdf), In Proceedings of the 14th International Symposium on Parallel Architectures, Algorithms and Programming, PAAP'23, pp.1-6, IEEE, 2023.
