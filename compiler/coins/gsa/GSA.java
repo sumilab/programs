@@ -28,7 +28,7 @@ public class GSA implements LocalTransformer {
     public boolean doIt(Data data, ImList args) { return true; }
     public String name() { return "GSA"; }
     public String subject() {
-    	return "Global store statement aggregation.";
+    	return "Optimizatin with efficient question propagation.";
     }
     private String tmpSymName="_gsa";
     
@@ -91,8 +91,14 @@ public class GSA implements LocalTransformer {
 		this.sstab = sstab;
 	}
     
+    public GSA(SsaEnvironment env, SsaSymTab sstab, Function f) {
+		this.env = env;
+		this.sstab = sstab;
+		this.f = f;
+	}
+    
     /**
-     * Do global store statement aggregation.
+     * Do optimize using Efficient Question Propagation.
      * @param f The current function
      **/
     
@@ -335,7 +341,7 @@ public class GSA implements LocalTransformer {
 		}
 	}
 	
-	private boolean compNSameAddr(LirNode addr, BasicBlk blk) {
+	public boolean compNSameAddr(LirNode addr, BasicBlk blk) {
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n2 = (LirNode)p.elem();
 			if(sameAddr(n2, addr)) {
@@ -346,7 +352,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compXSameAddr(LirNode addr, BasicBlk blk) {
+	public boolean compXSameAddr(LirNode addr, BasicBlk blk) {
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n2 = (LirNode)p.elem();
 			if(sameAddr(n2, addr)) {
@@ -357,7 +363,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compNIsSame(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk) {
+	public boolean compNIsSame(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk) {
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -376,7 +382,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compXIsSame(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk) {
+	public boolean compXIsSame(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk) {
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -395,7 +401,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compNModIdx(ArrayList<LirNode> vars, BasicBlk blk) {
+	public boolean compNModIdx(ArrayList<LirNode> vars, BasicBlk blk) {
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n = (LirNode)p.elem();
 			if(isModIdx(n, vars)) return true;
@@ -404,7 +410,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compXModIdx(ArrayList<LirNode> vars, BasicBlk blk) {
+	public boolean compXModIdx(ArrayList<LirNode> vars, BasicBlk blk) {
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n = (LirNode)p.elem();
 			if(isModIdx(n, vars)) return true;
@@ -413,7 +419,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compNIsStore(LirNode n1, ArrayList<LirNode> vars, BasicBlk blk){
+	public boolean compNIsStore(LirNode n1, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -429,7 +435,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compXIsStore(LirNode n1, ArrayList<LirNode> vars, BasicBlk blk){
+	public boolean compXIsStore(LirNode n1, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -445,7 +451,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private void compNMod(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
+	public void compNMod(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -463,7 +469,7 @@ public class GSA implements LocalTransformer {
 		}
 	}
 	
-	private void compXMod(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
+	public void compXMod(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -481,7 +487,7 @@ public class GSA implements LocalTransformer {
 		}
 	}
 	
-	private boolean compNUsed(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
+	public boolean compNUsed(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().first();!p.atEnd();p=p.next()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -504,7 +510,7 @@ public class GSA implements LocalTransformer {
 		return false;
 	}
 	
-	private boolean compXUsed(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
+	public boolean compXUsed(LirNode n1, LirNode addr, ArrayList<LirNode> vars, BasicBlk blk){
 		for(BiLink p=blk.instrList().last();!p.atEnd();p=p.prev()){
 			LirNode n2 = (LirNode)p.elem();
 			
@@ -720,7 +726,7 @@ public class GSA implements LocalTransformer {
 			for(BiLink p=f.flowGraph().basicBlkList.last();!p.atEnd();p=p.prev()){
 				BasicBlk blk = (BasicBlk)p.elem();
 				boolean x = false;
-				if(xDelayed[blk.id]) {
+				if(xDelayed[blk.id] && !xDead[blk.id]) {
 					if(blk!=f.flowGraph().exitBlk()){
 						for(BiLink q=blk.succList().first();!q.atEnd();q=q.next()){
 							BasicBlk succ = (BasicBlk)q.elem();
@@ -732,7 +738,7 @@ public class GSA implements LocalTransformer {
 					}
 				}
 				
-				boolean n = nDelayed[blk.id] && !xDelayed[blk.id];
+				boolean n = nDelayed[blk.id] && !xDelayed[blk.id] && !nDead[blk.id];
 				if(nInsert[blk.id]!=n || xInsert[blk.id]!=x) change = true;
 				nInsert[blk.id] = n;
 				xInsert[blk.id] = x;
@@ -874,7 +880,7 @@ public class GSA implements LocalTransformer {
 			 */
 			if(isMustMod(expr.kid(0),node,vars,nvars,blk,p)) {
 				if(node.kid(0).kid(0).equals(expr.kid(0).kid(0))) {
-					//System.out.println("Local Dead!!!");
+					System.out.println("Local Dead!!!");
 					p.unlink();
 					return true;
 				}
@@ -903,7 +909,7 @@ public class GSA implements LocalTransformer {
 				if(node_addr.equals(addr)){
 					// This store statement refers to the same array with expr
 					if(latest!=null){
-						//System.out.println("Local Code Motion!");
+						System.out.println("Local Code Motion!");
 						q.addBefore(expr.makeCopy(env.lir));
 						p.unlink();
 						return true;
@@ -948,7 +954,7 @@ public class GSA implements LocalTransformer {
 				compDead();
 				
 				if(dce(blk)) {
-					//System.out.println("Dead!");
+					System.out.println("Dead!");
 					p.unlink();
 					continue;
 				}
@@ -959,7 +965,7 @@ public class GSA implements LocalTransformer {
 				compInsert();
 				
 				if(sinking(blk)) {
-					//System.out.println("Sinking!");
+					System.out.println("Sinking!");
 					LirNode newNode = createNewStatement(node);
 					LirNode newStore = node.makeCopy(env.lir);
 					newStore.setKid(1, newNode.kid(0));
@@ -1068,7 +1074,14 @@ public class GSA implements LocalTransformer {
 	}
 
 	
+	void init() {
+		dfst=(DFST)f.require(DFST.analyzer);
+		idBound = f.flowGraph().idBound();
+		bVecInOrderOfRPost = dfst.blkVectorByRPost();
+	}
+	
 	void gsa() {
+		init();
 		localCodeMotion();
 		globalCodeMotion();
 	}
@@ -1082,10 +1095,6 @@ public class GSA implements LocalTransformer {
       env.println("****************** doing GSA to "+
     		  f.symbol.name,SsaEnvironment.MinThr);
 
-      dfst=(DFST)f.require(DFST.analyzer);
-      idBound = f.flowGraph().idBound();
-      bVecInOrderOfRPost = dfst.blkVectorByRPost();
-      
       gsa();
 
       f.flowGraph().touch();
