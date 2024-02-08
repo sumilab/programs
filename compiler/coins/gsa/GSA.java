@@ -726,7 +726,7 @@ public class GSA implements LocalTransformer {
 			for(BiLink p=f.flowGraph().basicBlkList.last();!p.atEnd();p=p.prev()){
 				BasicBlk blk = (BasicBlk)p.elem();
 				boolean x = false;
-				if(xDelayed[blk.id] && !xDead[blk.id]) {
+				if(xDelayed[blk.id]) {
 					if(blk!=f.flowGraph().exitBlk()){
 						for(BiLink q=blk.succList().first();!q.atEnd();q=q.next()){
 							BasicBlk succ = (BasicBlk)q.elem();
@@ -738,7 +738,7 @@ public class GSA implements LocalTransformer {
 					}
 				}
 				
-				boolean n = nDelayed[blk.id] && !xDelayed[blk.id] && !nDead[blk.id];
+				boolean n = nDelayed[blk.id] && !xDelayed[blk.id];
 				if(nInsert[blk.id]!=n || xInsert[blk.id]!=x) change = true;
 				nInsert[blk.id] = n;
 				xInsert[blk.id] = x;
