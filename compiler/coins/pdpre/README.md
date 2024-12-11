@@ -1,4 +1,4 @@
-This program is an implementation of LDPRE in [COINS](https://sourceforge.net/projects/coins-project/) compiler.
+This program is an implementation of PDPRE in [COINS](https://sourceforge.net/projects/coins-project/) compiler.
 
 Example of compilation
 `java -classpath ./classes coins.driver.Driver -coins:target=x86_64,ssa-opt=esplt/divex/prun/pdpre/srd3`
