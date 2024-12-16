@@ -5,7 +5,7 @@ Example of compilation
 
 * `divex`: making each statement three-address code
 * `prun`: converting program from the normal form to the SSA form
-* `pdpre`: applying LDPRE
+* `pdpre`: applying PDPRE
 * `srd3`: converting program from the SSA form to the normal form
 
 # Publication
